@@ -1,0 +1,10 @@
+python main.py \
+ --feature_type my \
+ --file_with_video_paths path.txt \
+ --device_ids 0 \
+ --tmp_path /tmp \
+ --on_extraction save_numpy \
+ --output_path ./output \
+ --extraction_fps 22 \
+ --streams flow \
+ --flow_type raft \
