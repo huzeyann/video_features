@@ -30,6 +30,12 @@ class PermuteAndUnsqueeze(object):
         return tensor.permute(1, 0, 2, 3).unsqueeze(0)
 
 
+class Permute(object):
+
+    def __call__(self, tensor: torch.FloatTensor) -> torch.FloatTensor:
+        return tensor.permute(1, 0, 2, 3)
+
+
 class Clamp(object):
 
     def __init__(self, min_val, max_val) -> None:

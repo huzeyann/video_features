@@ -7,6 +7,8 @@ import models.raft.raft_src.utils.flow_viz as flow_viz
 import numpy as np
 import torch
 import torchvision.transforms as transforms
+
+from models.i3d.transforms.transforms import Clamp, ToUInt8
 from models.raft.raft_src.raft import RAFT, InputPadder
 from models.raft.transforms.transforms import (ResizeImproved, ToFloat,
                                                ToTensorWithoutScaling)
@@ -94,6 +96,10 @@ class ExtractRAFT(torch.nn.Module):
 
             with torch.no_grad():
                 flow = model(batch[:-1], batch[1:])
+                # s = flow.shape
+                # flow = flow.reshape(2, -1)
+                # flow = flow - flow.mean(1, keepdim=True)
+                # flow = flow.reshape(s)
                 # upadding only before saving because np.concat will not work if the img is unpadded
                 flow_frames.extend(padder.unpad(flow).tolist())
                 # show optical flow along with rgb frames
@@ -151,8 +157,20 @@ class ExtractRAFT(torch.nn.Module):
         if (self.extraction_fps is not None) and (not self.keep_tmp_files):
             os.remove(video_path)
 
+        i3d_transforms = transforms.Compose([
+            Clamp(-20, 20),
+            ToUInt8(),
+        ])
+
+        flow_frames = i3d_transforms(torch.tensor(np.array(flow_frames)))
+
+        flow_frames = flow_frames.cpu().numpy().astype(np.uint8)
+        # flow_frames = flow_frames - flow_frames.mean(0, keepdim=True)
+        print(flow_frames.shape)
+        # print(flow_frames)
+
         features_with_meta = {
-            self.feature_type: np.array(flow_frames),
+            self.feature_type: flow_frames,
             'fps': np.array(fps),
             'timestamps_ms': np.array(timestamps_ms)
         }

@@ -242,26 +242,34 @@ class I3D(torch.nn.Module):
         out = self.maxPool3d_2a_3x3(out)
         out = self.conv3d_2b_1x1(out)
         out = self.conv3d_2c_3x3(out)
-        out = self.maxPool3d_3a_3x3(out)
-        out = self.mixed_3b(out)
+        x1 = self.maxPool3d_3a_3x3(out)
+        out = self.mixed_3b(x1)
         out = self.mixed_3c(out)
-        out = self.maxPool3d_4a_3x3(out)
-        out = self.mixed_4b(out)
+        x2 = self.maxPool3d_4a_3x3(out)
+        out = self.mixed_4b(x2)
         out = self.mixed_4c(out)
         out = self.mixed_4d(out)
         out = self.mixed_4e(out)
         out = self.mixed_4f(out)
-        out = self.maxPool3d_5a_2x2(out)
-        out = self.mixed_5b(out)
-        out = self.mixed_5c(out)  # <- [1,  832, 8 (for T=64) or 3 (for T=24), 1, 1]
-        out = self.avg_pool(out)  # <- [1, 1024, 8 (for T=64) or 3 (for T=24), 1, 1]
+        x3 = self.maxPool3d_5a_2x2(out)
+        out = self.mixed_5b(x3)
+        x4 = self.mixed_5c(out)  # <- [1,  832, 8 (for T=64) or 3 (for T=24), 1, 1]
+        out = self.avg_pool(x4)  # <- [1, 1024, 8 (for T=64) or 3 (for T=24), 1, 1]
 
         if features:
             out = out.squeeze(3)  # <- (B, 1024, 8 (for T=64) or 3 (for T=24), 1)
             out = out.squeeze(3)  # <- (B, 1024, 8 (for T=64) or 3 (for T=24))
-            out = out.mean(2)     # <- (B, 1024)
+            out = out.mean(2)  # <- (B, 1024)
 
-            return out  # (B, 1024)
+            out_dict = {
+                'x1': x1.cpu().numpy(),
+                'x2': x2.cpu().numpy(),
+                'x3': x3.cpu().numpy(),
+                'x4': x4.cpu().numpy(),
+                'x5': out.cpu().numpy()
+            }
+
+            return out_dict
         else:
             out = self.dropout(out)
             out = self.conv3d_0c_1x1(out)
@@ -272,6 +280,7 @@ class I3D(torch.nn.Module):
             out = self.softmax(out_logits)
 
             return out, out_logits
+
     #
 
     def load_tf_weights(self, sess):

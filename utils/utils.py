@@ -61,6 +61,7 @@ def action_on_extraction(feats_dict: Dict[str, np.ndarray], video_path, output_p
         if on_extraction == 'print':
             print(key)
             print(value)
+            print(value.shape)
             print(f'max: {value.max():.8f}; mean: {value.mean():.8f}; min: {value.min():.8f}')
             print()
         elif on_extraction == 'save_numpy':
@@ -81,8 +82,8 @@ def action_on_extraction(feats_dict: Dict[str, np.ndarray], video_path, output_p
             fname = f'{Path(video_path).stem}_{key}.pkl'
             # construct the paths to save the features
             fpath = os.path.join(output_path, fname)
-            if key != 'fps' and len(value) == 0:
-                print(f'Warning: the value is empty for {key} @ {fpath}')
+            # if key != 'fps' and (value) == 0:
+            #     print(f'Warning: the value is empty for {key} @ {fpath}')
             # save the info behind the each key
             pickle.dump(value, open(fpath, 'wb'))
         else:
@@ -186,9 +187,9 @@ def reencode_video_with_diff_fps(video_path: str, tmp_path: str, extraction_fps:
     # form the path to tmp directory
     new_path = os.path.join(tmp_path, f'{Path(video_path).stem}_new_fps.mp4')
     cmd = f'{which_ffmpeg()} -hide_banner -loglevel panic '
-    cmd += f'-y -i {video_path} -filter:v fps=fps={extraction_fps} {new_path}'
+    cmd += f'-y -i {video_path} -t 2.9493087557603688 -filter:v fps=fps={extraction_fps} {new_path}'
+    # cmd += f'-y -i {video_path} -t 2.9493087557603688 -filter:v minterpolate {new_path}'
     subprocess.call(cmd.split())
-
     return new_path
 
 
